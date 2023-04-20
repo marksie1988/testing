@@ -23,14 +23,14 @@ jobs:
         run: |
           pip install -r docs/requirements.txt
 
+      - name: Create version file
+        run: |
+          echo "{\"version\": \"${GITHUB_REF#refs/tags/}\"}" > docs/_build/html/version.json
+
       - name: Build docs
         run: |
           cd docs/
           sphinx-build -b html -a -E -d _build/doctrees . _build/html
-
-      - name: Create version file
-        run: |
-          echo "{\"version\": \"${GITHUB_REF#refs/tags/}\"}" > docs/_build/html/version.json
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3
