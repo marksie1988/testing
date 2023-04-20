@@ -25,9 +25,8 @@ jobs:
 
       - name: Create version file
         run: |
-          echo "{\"version\": \"${GITHUB_REF#refs/tags/}\"}" > docs/version.json
-          pwd
-          ls docs
+          echo "{\"version\": \"${GITHUB_REF#refs/tags/}\"}" > docs/versions.json
+
       - name: Build docs
         run: |
           cd docs/
