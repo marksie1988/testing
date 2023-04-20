@@ -1,38 +1,39 @@
-name: Update Sphinx Documentation
+name: Deploy Docs
 
 on:
   push:
+    branches:
+      - main
     tags:
-      - 'v*'
-
+      - "*"
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Setup Python
+
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: "3.x"
+
       - name: Install dependencies
-        run: pip install -r docs/requirements.txt
-      - name: Generate versions.json
         run: |
-          git fetch --tags
-          TAGS=($(git tag --sort=committerdate))
-          jq -n --argjson tags "$(printf '%s\n' "${TAGS[@]}" | jq -R . | jq -s .)" '{ versions: $tags }' > versions.json
-          git add versions.json
-          git -c user.name='GitHub Actions' -c user.email='actions@github.com' commit -m 'Update versions.json' || echo "No changes to commit"
-      - name: Update Sphinx configuration
+          pip install -r requirements.txt
+          pip install sphinx_rtd_theme
+
+      - name: Build docs
         run: |
-          sed -i "s|^version = .*|version = '${{ github.ref }}'|" docs/conf.py
-          sed -i "s|^release = .*|release = '${{ github.ref }}'|" docs/conf.py
-          sed -i "s|^html_baseurl = .*|html_baseurl = 'https://github.com/${{ github.repository }}/tree/${{ github.ref }}/'|" docs/conf.py
-      - name: Build HTML documentation
-        run: sphinx-build -b html docs build/html
-      - name: Publish to GitHub Pages
+          sphinx-build -b html -a -E -d _build/doctrees . _build/html
+
+      - name: Create version file
+        run: |
+          echo "{\"version\": \"${GITHUB_REF#refs/tags/}\"}" > _build/html/version.json
+
+      - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build/html
+          publish_dir: ./_build/html/
