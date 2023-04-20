@@ -18,7 +18,7 @@ copyright = "2021, Steven Marks, TotalDebug"
 author = "Steven Marks, TotalDebug"
 
 # Load the versions.json file
-with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'versions.json'), 'r') as f:
+with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '_build', 'html', '_static','versions.json'), 'r') as f:
     versions = json.load(f)
 
 # Set the version and release variables
@@ -29,6 +29,12 @@ html_context = {
     'versions': versions,
     'version': version,
     'release': release,
+}
+
+html_theme_options = {
+    'versions': versions,
+    'version_dropdown': True,
+    'sticky_navigation': True
 }
 
 extensions = [
