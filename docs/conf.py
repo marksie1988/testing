@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import json
-import os
 from os.path import abspath, dirname, join
 import re
 import sys
@@ -17,25 +16,22 @@ slug = re.sub(r"\W+", "-", project.lower())
 copyright = "2021, Steven Marks, TotalDebug"
 author = "Steven Marks, TotalDebug"
 
-# Load the versions.json file
-with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '_build', 'html', '_static','versions.json'), 'r') as f:
-    versions = json.load(f)
-
-# Set the version and release variables
-version = versions['version']
-release = versions['version']
-
-html_context = {
-    'versions': versions,
-    'version': version,
-    'release': release,
-}
-
 html_theme_options = {
-    'versions': versions,
+    'versions': json.loads(open('versions.json').read()),
     'version_dropdown': True,
     'sticky_navigation': True
 }
+
+# The short X.Y version
+def get_version():
+    with open("../pyproject.toml") as f:
+        config = toml.load(f)
+    return config["tool"]["poetry"]["version"]
+
+
+version = get_version()
+# The full version, including alpha/beta/rc tags
+release = ""
 
 extensions = [
     "sphinx.ext.autodoc",
@@ -79,6 +75,7 @@ html_theme_options = {
     "logo_only": True,
     "navigation_depth": 5,
 }
+html_js_files = ['versions.js']
 
 htmlhelp_basename = slug
 
