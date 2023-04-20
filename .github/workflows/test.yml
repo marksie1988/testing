@@ -25,8 +25,7 @@ jobs:
 
       - name: Create version file
         run: |
-          mkdir -p docs/_build/html/
-          echo "{\"version\": \"${GITHUB_REF#refs/tags/}\"}" > docs/_build/html/version.json
+          echo "{\"version\": \"${GITHUB_REF#refs/tags/}\"}" > docs/version.json
 
       - name: Build docs
         run: |
