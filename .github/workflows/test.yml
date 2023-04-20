@@ -1,40 +1,92 @@
-name: Deploy Docs
+name: Test & Publish
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
     tags:
-      - "*"
+      - '*'
+  pull_request:
+    branches: [ main ]
+
+
 jobs:
-  deploy:
+  check:
+    name: check
     runs-on: ubuntu-latest
-
+    strategy:
+      fail-fast: false
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.x"
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - name: Install Python 3.11
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.11
 
-      - name: Install dependencies
-        run: |
-          pip install -r docs/requirements.txt
 
-      - name: Create version file
-        run: |
-          mkdir -p docs/_build/html/_static
-          echo "{\"version\": \"${GITHUB_REF#refs/tags/}\"}" > docs/_build/html/_static/versions.json
 
-      - name: Build docs
-        run: |
-          sphinx-build -b html -a -E -d _build/doctrees docs _build/html
+    - name: Determine directory to publish docs to
+      id: docs-publish-dir
+      uses: jannekem/run-python-script-action@v1
+      with:
+        script: |
+          import os, re
+          github_ref = os.environ.get('GITHUB_REF')
+          m = re.match(r'^refs/tags/v([0-9]+\.[0-9]+\.[0-9]+(-dev\.[0-9]+)?)$',
+                       github_ref)
+          if m:
+              target = m.group(1)
+          elif github_ref == 'refs/heads/main':
+              target = 'main'
+          else:
+              target = ''
+          set_output('target', target)
+    - name: Publish docs to GitHub pages
+      if: steps.docs-publish-dir.outputs.target != ''
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: doc/_build/html
+        destination_dir: ${{ steps.docs-publish-dir.outputs.target }}
+        keep_files: false
+    outputs:
+      docs-target: ${{ steps.docs-publish-dir.outputs.target }}
 
-      - name: Deploy to gh-pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: _build/html/
+  docs-versions:
+    name: Update docs versions JSON
+    needs: check
+    if: needs.check.outputs.docs-target != ''
+    runs-on: Ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: gh-pages
+    - name: Write versions to JSON file
+      uses: jannekem/run-python-script-action@v1
+      with:
+        script: |
+          import json
+          from pathlib import Path
+
+          cwd = Path.cwd()
+          versions = sorted((item.name for item in cwd.iterdir()
+                             if item.is_dir() and not item.name.startswith('.')),
+                            reverse=True)
+          target_dir = Path('gh-pages')
+          target_dir.mkdir(parents=True)
+          legacy_target_file = target_dir / 'versions.json'
+          with legacy_target_file.open('w') as f:
+              json.dump(versions, f)
+          im_versions = [dict(version=version, title=version, aliases=[])
+                         for version in versions]
+          immaterial_target_file = target_dir / 'im_versions.json'
+          with immaterial_target_file.open('w') as f:
+              json.dump(im_versions, f)
+
+    - name: Publish versions JSON to GitHub pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: gh-pages
+        keep_files: true
