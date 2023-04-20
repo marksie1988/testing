@@ -1,0 +1,37 @@
+name: Update Sphinx Documentation
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+      - name: Install dependencies
+        run: pip install -r docs/requirements.txt
+      - name: Update Sphinx configuration
+        run: |
+          sed -i "s/^version = .*/version = '${{ github.ref }}'/" docs/conf.py
+          sed -i "s/^release = .*/release = '${{ github.ref }}'/" docs/conf.py
+          sed -i "s|^html_baseurl = .*|html_baseurl = 'https://github.com/${{ github.repository }}/tree/${{ github.ref }}/'|" docs/conf.py
+      - name: Build HTML documentation
+        run: sphinx-build -b html source build/html
+      - name: Generate versions.json
+        run: |
+          echo '{' > versions.json
+          echo '  "latest": "/",' >> versions.json
+          git tag | grep '^v' | sort -rV | awk '{print "  \"" $0 "\": \"/" $0 "/\","}' >> versions.json
+          echo '}' >> versions.json
+      - name: Publish to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/html
