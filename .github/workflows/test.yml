@@ -22,6 +22,8 @@ jobs:
           git fetch --tags
           TAGS=($(git tag --sort=committerdate))
           jq -n --argjson tags "$(printf '%s\n' "${TAGS[@]}" | jq -R . | jq -s .)" '{ versions: $tags }' > versions.json
+          git add versions.json
+          git -c user.name='GitHub Actions' -c user.email='actions@github.com' commit -m 'Update versions.json' || echo "No changes to commit"
       - name: Update Sphinx configuration
         run: |
           sed -i "s|^version = .*|version = '${{ github.ref }}'|" docs/conf.py
