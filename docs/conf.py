@@ -18,7 +18,7 @@ copyright = "2021, Steven Marks, TotalDebug"
 author = "Steven Marks, TotalDebug"
 
 # Load the versions.json file
-with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'docs', 'versions.json'), 'r') as f:
+with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'versions.json'), 'r') as f:
     versions = json.load(f)
 
 # Set the version and release variables
