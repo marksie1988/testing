@@ -19,8 +19,8 @@ jobs:
         run: pip install -r docs/requirements.txt
       - name: Update Sphinx configuration
         run: |
-          sed -i "s/^version = .*/version = '${{ github.ref }}'/" docs/conf.py
-          sed -i "s/^release = .*/release = '${{ github.ref }}'/" docs/conf.py
+          sed -i "s|^version = .*|version = '${{ github.ref }}'|" docs/conf.py
+          sed -i "s|^release = .*|release = '${{ github.ref }}'|" docs/conf.py
           sed -i "s|^html_baseurl = .*|html_baseurl = 'https://github.com/${{ github.repository }}/tree/${{ github.ref }}/'|" source/conf.py
       - name: Build HTML documentation
         run: sphinx-build -b html source build/html
