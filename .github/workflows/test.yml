@@ -25,14 +25,15 @@ jobs:
 
       - name: Build docs
         run: |
+          cd docs/
           sphinx-build -b html -a -E -d _build/doctrees . _build/html
 
       - name: Create version file
         run: |
-          echo "{\"version\": \"${GITHUB_REF#refs/tags/}\"}" > _build/html/version.json
+          echo "{\"version\": \"${GITHUB_REF#refs/tags/}\"}" > docs/_build/html/version.json
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./_build/html/
+          publish_dir: ./docs/_build/html/
