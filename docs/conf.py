@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+import os
 from os.path import abspath, dirname, join
 import re
 import sys
@@ -16,10 +17,18 @@ slug = re.sub(r"\W+", "-", project.lower())
 copyright = "2021, Steven Marks, TotalDebug"
 author = "Steven Marks, TotalDebug"
 
-html_theme_options = {
-    'versions': json.loads(open('versions.json').read()),
-    'version_dropdown': True,
-    'sticky_navigation': True
+# Load the versions.json file
+with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'versions.json'), 'r') as f:
+    versions = json.load(f)
+
+# Set the version and release variables
+version = versions['version']
+release = versions['version']
+
+html_context = {
+    'versions': versions,
+    'version': version,
+    'release': release,
 }
 
 extensions = [
