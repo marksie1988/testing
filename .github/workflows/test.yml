@@ -23,7 +23,7 @@ jobs:
           sed -i "s|^release = .*|release = '${{ github.ref }}'|" docs/conf.py
           sed -i "s|^html_baseurl = .*|html_baseurl = 'https://github.com/${{ github.repository }}/tree/${{ github.ref }}/'|" docs/conf.py
       - name: Build HTML documentation
-        run: sphinx-build -b html source build/html
+        run: sphinx-build -b html docs build/html
       - name: Generate versions.json
         run: |
           echo '{' > versions.json
